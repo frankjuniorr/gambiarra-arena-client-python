@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Gambiarra Python Client
+  gambiarra-client:
+    build: .
+    container_name: gambiarra-client
+    env_file:
+      - .env
+    networks:
+      - gambiarra-network
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # Ollama Service (optional - comment out if using external Ollama)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: gambiarra-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - gambiarra-network
+    restart: unless-stopped
+
+networks:
+  gambiarra-network:
+    driver: bridge
+
+volumes:
+  ollama-data:

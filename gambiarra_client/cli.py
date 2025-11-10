@@ -3,9 +3,13 @@
 
 import argparse
 import asyncio
+import os
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
+
+from dotenv import load_dotenv
 
 from .net.ws import GambiarraClient, ClientConfig, Challenge, TokenMessage, CompleteMessage, ErrorMessage
 from .runners import Runner, GenerateOptions, MockRunner, OllamaRunner, LMStudioRunner
@@ -128,23 +132,37 @@ async def handle_challenge(
 
 async def main():
     """Main entry point."""
+    # Load .env file if it exists
+    env_path = Path(".env")
+    if env_path.exists():
+        load_dotenv(env_path)
+        print_info("Loaded configuration from .env file\n")
+
     parser = argparse.ArgumentParser(
         description="Cliente para Gambiarra LLM Club Arena",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
 
-    parser.add_argument("--url", default="ws://localhost:3000/ws", help="WebSocket server URL")
-    parser.add_argument("--pin", required=True, help="Session PIN")
-    parser.add_argument("--participant-id", required=True, help="Participant ID")
-    parser.add_argument("--nickname", required=True, help="Participant nickname")
-    parser.add_argument("--runner", default="ollama", choices=["ollama", "lmstudio", "mock"], help="Runner type")
-    parser.add_argument("--model", default="llama3.1:8b", help="Model name")
-    parser.add_argument("--temperature", type=float, default=0.8, help="Temperature")
-    parser.add_argument("--max-tokens", type=int, default=400, help="Max tokens")
-    parser.add_argument("--ollama-url", default="http://localhost:11434", help="Ollama API URL")
-    parser.add_argument("--lmstudio-url", default="http://localhost:1234", help="LM Studio API URL")
+    parser.add_argument("--url", default=os.getenv("GAMBIARRA_URL", "ws://localhost:3000/ws"), help="WebSocket server URL")
+    parser.add_argument("--pin", default=os.getenv("GAMBIARRA_PIN"), help="Session PIN")
+    parser.add_argument("--participant-id", default=os.getenv("PARTICIPANT_ID"), help="Participant ID")
+    parser.add_argument("--nickname", default=os.getenv("NICKNAME"), help="Participant nickname")
+    parser.add_argument("--runner", default=os.getenv("RUNNER", "ollama"), choices=["ollama", "lmstudio", "mock"], help="Runner type")
+    parser.add_argument("--model", default=os.getenv("MODEL", "llama3.1:8b"), help="Model name")
+    parser.add_argument("--temperature", type=float, default=float(os.getenv("TEMPERATURE", "0.8")), help="Temperature")
+    parser.add_argument("--max-tokens", type=int, default=int(os.getenv("MAX_TOKENS", "400")), help="Max tokens")
+    parser.add_argument("--ollama-url", default=os.getenv("OLLAMA_URL", "http://localhost:11434"), help="Ollama API URL")
+    parser.add_argument("--lmstudio-url", default=os.getenv("LMSTUDIO_URL", "http://localhost:1234"), help="LM Studio API URL")
 
     args = parser.parse_args()
+
+    # Validate required arguments
+    if not args.pin:
+        parser.error("--pin is required (or set GAMBIARRA_PIN in .env)")
+    if not args.participant_id:
+        parser.error("--participant-id is required (or set PARTICIPANT_ID in .env)")
+    if not args.nickname:
+        parser.error("--nickname is required (or set NICKNAME in .env)")
 
     print_banner()
 
