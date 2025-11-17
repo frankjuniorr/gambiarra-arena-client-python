@@ -127,7 +127,12 @@ Se preferir rodar com Docker Compose:
 # GAMBIARRA_URL=ws://host.docker.internal:3000/ws (Mac/Windows)
 # OLLAMA_URL=http://ollama:11434
 
-docker compose up
+cd scripts
+chmod +x *.sh
+./start-client.sh
+
+# em outro terminal, execute
+./start-round.sh
 ```
 
 **Nota:** Docker adiciona complexidade de networking. Recomendamos execução local para facilitar.
